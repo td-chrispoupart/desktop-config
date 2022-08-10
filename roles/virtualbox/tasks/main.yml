@@ -1,0 +1,48 @@
+---
+- name: Check if fedora-testing repo is enabled
+  become: true
+  ansible.builtin.command: dnf repolist --enabled
+  register: dnf_repolist
+  changed_when: false
+  when: ansible_distribution == "Fedora"
+
+- name: Warn if testing repos are enabled
+  ansible.builtin.debug:
+    msg: "WARNING: Fedora Testing or Fedora Updates Testing is enabled. This can break VirtualBox."
+  when: "'testing' in dnf_repolist.stdout and ansible_distribution == 'Fedora'"
+
+- name: Ensure VirtualBox YUM repo is present
+  become: true
+  ansible.builtin.yum_repository:
+    name: virtualbox
+    description: virtualbox
+    # This is hardcoded to the Fedora 34 repo because VirtualBox is very slow to
+    # support new Fedora releases.
+    # TODO: Update to 35 repo when Oracle releases it.
+    baseurl: "http://download.virtualbox.org/virtualbox/rpm/fedora/34/$basearch"
+    enabled: true
+    gpgcheck: true
+    repo_gpgcheck: true
+    gpgkey: https://www.virtualbox.org/download/oracle_vbox.asc
+  when: ansible_distribution == "Fedora"
+
+- name: Ensure kernel headers are present
+  become: true
+  ansible.builtin.package:
+    name:
+      - kernel-devel
+      - kernel-devel-matched
+      - kernel-headers
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure VirtualBox is installed
+  become: true
+  ansible.builtin.package:
+    name:
+      - "{{ virtual_box_package_name | default('VirtualBox-6.1') }}"
+    state: present
+
+- name: Ensure Oracle Extension Pack is not present
+  include_tasks: uninstall-extension-pack.yml
+  when: is_work_computer

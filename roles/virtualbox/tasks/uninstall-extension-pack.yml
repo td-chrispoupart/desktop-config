@@ -1,0 +1,15 @@
+---
+- name: Register all installed extensions
+  ansible.builtin.command: vboxmanage list extpacks
+  changed_when: no
+  check_mode: no
+  failed_when: result.rc != 0
+  register: result
+
+- name: Uninstall extension pack
+  shell: vboxmanage extpack uninstall --force "Oracle VM VirtualBox Extension Pack"
+  changed_when: no
+  check_mode: no
+  when: "('Oracle VM VirtualBox Extension Pack' in result.stdout) and
+        is_work_computer"
+  tags: [virtualbox]

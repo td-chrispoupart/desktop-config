@@ -1,0 +1,8 @@
+---
+- name: Install Terminology
+  become: true
+  ansible.builtin.package:
+    name: terminology
+    state: present
+
+# TODO: Edit the theme to our preferred value

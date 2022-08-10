@@ -1,0 +1,78 @@
+---
+- name: Test if RPM Fusion repos exist
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/rpmfusion-free.repo
+  register: rpmfusion
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure RPM Fusion repos are installed
+  become: true
+  ansible.builtin.yum:
+    name:
+      - https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm
+      - https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}).noarch.rpm
+    state: present
+  when:
+    - ansible_distribution == "Fedora"
+    - not rpmfusion.stat.exists
+
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Set libnghttp2_arch
+  ansible.builtin.set_fact:
+    libnghttp2_arch: "{{ packages.libnghttp2 | json_query('[*].arch') }}"
+
+# DNF will filter out packages from regular yum repositories if they are present
+# in active modules. Unfortunately, nodejs modules do not provide
+# 'libnghttp2.i686' packages, but filter out all 'libnghttp2' packages from the
+# base repositories that do. To work around this, we must disable any 'nodejs'
+# appstream/module that is enabled, install our dependency for Steam, and then
+# re-enable 'nodejs'.
+
+- name: Is a nodejs appstream enabled?
+  become: true
+  ansible.builtin.shell: dnf module list --enabled | grep nodejs
+  register: is_nodejs_appstream_enabled
+  changed_when: is_nodejs_appstream_enabled.rc == 0
+  failed_when: false
+  when:
+    - not is_work_computer
+    - "'i686' not in libnghttp2_arch"
+    - ansible_os_family == "RedHat"
+
+- name: Get enabled nodejs module version
+  become: true
+  ansible.builtin.shell: dnf module list --enabled | grep nodejs | cut -d" " -f2
+  register: nodejs_appstream_version
+  changed_when: false
+  failed_when: false
+  when:
+    - is_nodejs_appstream_enabled.changed
+
+- name: Disable "nodejs" AppStreams
+  become: true
+  ansible.builtin.command: dnf module disable nodejs:{{ nodejs_appstream_version.stdout }} -y
+  register: disable_appstream
+  when: is_nodejs_appstream_enabled.changed
+
+- name: Ensure i686 dependencies are installed
+  become: true
+  ansible.builtin.dnf:
+    name: libnghttp2.i686
+    state: present
+  when:
+    - not is_work_computer
+    - "'i686' not in libnghttp2_arch"
+    - ansible_os_family == "RedHat"
+
+- name: Re-enable "nodejs:{{ nodejs_appstream_version.stdout }}" AppStream
+  become: true
+  ansible.builtin.command: dnf module enable nodejs:{{ nodejs_appstream_version.stdout }} -y
+  register: enable_appstream
+  changed_when: enable_appstream.rc == 0
+  when:
+    - is_nodejs_appstream_enabled.changed
+    - not is_work_computer
+    - ansible_os_family == "RedHat"

@@ -1,0 +1,75 @@
+---
+code_extensions:
+  ## Ansible and YAML
+  - redhat.vscode-yaml
+  - redhat.ansible
+  - samuelcolvin.jinjahtml
+
+  ## Jupyter
+  - ms-toolsai.jupyter
+
+  ## Terraform
+  - hashicorp.terraform
+
+  ## Docker and Remote Development
+  - ms-azuretools.vscode-docker
+
+  ## General development
+  - shardulm94.trailing-spaces
+  - vscode-icons-team.vscode-icons
+  - stkb.rewrap
+  - vivaxy.vscode-conventional-commits
+  - earshinov.sort-lines-by-selection
+
+  ## Git Utilities
+  - eamodio.gitlens
+  - donjayamanne.githistory
+  - mhutchie.git-graph
+
+  ## Markdown
+  - DavidAnson.vscode-markdownlint
+  - bierner.markdown-mermaid
+
+  ## Spellchecking
+  - streetsidesoftware.code-spell-checker
+
+  ## GitLab
+  - GitLab.gitlab-workflow
+
+  ## GitHub
+  - GitHub.vscode-pull-request-github
+  - GitHub.remotehub
+  - me-dutour-mathieu.vscode-github-actions
+
+  ## JIRA
+  - Atlassian.atlascode
+
+  ## Custom Overrides
+  - "{{ custom_codium_extensions }}"
+
+custom_codium_extensions: []
+
+codium_configs:
+  nerd_fonts: true
+  redhat_telemetry: false
+  trimonsave: true
+  theme: "Solarized Dark"
+  tabsize: 2
+  insertfinalnewline: true
+
+# name: VSCodium | Use OS-specifc variables
+# ansible.builtin.include_vars: "{{ os_specific_vars }}"
+# vars:
+#   variable_files:
+#     files:
+#       - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"  # noqa var-spacing
+#       - "{{ ansible_distribution }}.yml"
+#       - "{{ ansible_os_family }}.yml"
+#   os_specific_vars: "{{ lookup('ansible.builtin.first_found', variable_files) }}"
+# when:
+#   - (os_specific_vars | length > 0)
+
+#codium_bin: "/opt/homebrew/bin/codium"
+codium_bin: "/usr/local/bin/code"
+#codium_settings: "/Users/{{ codium_install_user }}/Library/Application Support/VSCodium/User/settings.json"
+codium_settings: "/Users/{{ codium_install_user }}/Library/Application Support/Code/User/settings.json"

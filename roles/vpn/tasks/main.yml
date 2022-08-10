@@ -1,0 +1,15 @@
+---
+- name: Install pipx
+  ansible.builtin.pip:
+    name: pipx
+    extra_args: --user
+    state: present
+
+- name: Check if openconnect-sso is installed...
+  ansible.builtin.stat:
+    path: ~/.local/bin/openconnect-sso
+  register: openconnect_sso
+
+- name: Install openconnect-sso
+  ansible.builtin.command: pipx install "openconnect-sso[full]"
+  when: not openconnect_sso.stat.exists

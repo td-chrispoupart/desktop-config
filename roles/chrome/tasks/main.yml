@@ -1,0 +1,30 @@
+---
+- name: Ensure that the Google Chrome Yum Repo is Configured
+  become: true
+  ansible.builtin.yum_repository:
+    name: google-chrome
+    description: google-chrome
+    baseurl: https://dl.google.com/linux/chrome/rpm/stable/x86_64
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://dl.google.com/linux/linux_signing_key.pub
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Google Chrome for Linux
+  become: true
+  ansible.builtin.package:
+    name: google-chrome-stable
+    state: present
+
+- name: Get the default Web Browser
+  ansible.builtin.command: xdg-settings get default-web-browser
+  register: current_default_browser
+  changed_when: false
+  when: "'google-chrome' in default_browser"
+
+- name: Make sure that Google Chrome is the default browser
+  ansible.builtin.command: xdg-settings set default-web-browser google-chrome.desktop
+  when:
+    - "'google-chrome' in default_browser"
+    - "'google-chrome' not in current_default_browser.stdout"

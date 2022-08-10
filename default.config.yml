@@ -1,0 +1,57 @@
+---
+# Want to change these variables for your own setup? Copy this file to
+# "config.yml" and edit away. It will take priority over this file. Variables
+# present in "config.yml" will override variables set here or in the roles where
+# they are used.
+
+# TODO: enhance git_config role to support different configs based on paths.
+# Some personal, some work, etc.
+git_config:
+  user_name: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  user_email: "{{ ansible_user | default(lookup('env', 'USER')) }}@{{ ansible_hostname }}"
+  init_defaultbranch: "main"
+
+default_browser: firefox
+# Options:
+#  - firefox
+#  - google-chrome
+#  - brave-browser
+
+flatpak_applications:
+  # Chat Software
+  - "com.mattermost.Desktop"
+  - "com.microsoft.Teams"
+  - "{{ custom_flatpak_applications }}"
+
+# Override the "custom_flatpak_applications" variable in your "config.yml" to
+# add to the list of software being installed.
+custom_flatpak_applications: []
+  # - "com.discordapp.Discord"
+  # - "org.signal.Signal"
+  # - "com.slack.Slack"
+
+nodejs_npm_global_packages:
+  - "commitizen"
+  - "markdownlint-cli"
+  - "npm-check-updates"
+  - "{{ custom_nodejs_npm_global_packages }}"
+
+# Override the "custom_nodejs_npm_global_packages" variable in your "config.yml"
+# to add to the list of software being installed.
+custom_nodejs_npm_global_packages: []
+  # - "@sanity/cli"
+
+# Override the "custom_codium_extension" variable in your "config.yml"
+# to add to the list of extensions installed by default.
+custom_codium_extensions: []
+
+is_work_computer: true
+
+## Secrets
+
+# :spy: Only set this variable in "config.yml", and vault it. Be responsible
+# with your secrets. This token needs: read access to git repositories.
+# gitlab_personal_access_token: ""
+
+# Use your GitLab account name, not your AD Login name.
+# gitlab_user: ""

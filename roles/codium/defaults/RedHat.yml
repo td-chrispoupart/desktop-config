@@ -1,0 +1,3 @@
+---
+codium_bin: "/usr/bin/codium"
+codium_settings: "/home/{{ codium_install_user }}/.config/VSCodium/User/settings.json"

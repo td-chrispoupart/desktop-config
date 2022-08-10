@@ -1,0 +1,8 @@
+pip
+keyrings.alt
+testresources
+setuptools
+wheel
+linode_api4
+ansible>=3.2.0
+jmespath

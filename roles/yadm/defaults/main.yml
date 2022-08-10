@@ -1,0 +1,3 @@
+---
+yadm_dotfiles_branch: 'main'
+yadm_bootstrap: "false" # set to "true" to run yadm

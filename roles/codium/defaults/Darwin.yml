@@ -1,0 +1,3 @@
+---
+codium_bin: "/opt/homebrew/bin/codium"
+codium_settings: "/Users/{{ codium_install_user }}/Library/Application Support/VSCodium/User/settings.json"

@@ -1,0 +1,19 @@
+---
+# This enables aux input over the headphone jack.
+# See: https://community.frame.work/t/fedora-linux-35-on-the-framework-laptop/6613
+- name: Configure snd_hda_intel modprobe for aux input over headphone jack
+  become: true
+  ansible.builtin.copy:
+    content: |
+      options snd-hda-intel model=dell-headset-multi
+    dest: /etc/modprobe.d/headphone_input.conf
+    mode: '0644'
+    owner: root
+    group: root
+  register: headphone_input_modprobe
+  when: "'Framework' in ansible_facts.system_vendor"
+
+- name: Load module if config changed
+  become: true
+  ansible.builtin.command: modprobe snd-hda-intel
+  when: headphone_input_modprobe.changed

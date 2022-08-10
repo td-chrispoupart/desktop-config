@@ -1,0 +1,24 @@
+---
+- name: Define install user
+  ansible.builtin.set_fact:
+    codium_install_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  when: codium_install_user is not defined
+
+# - name: Ensure VSCodium is installed
+#   become: false
+#   community.general.homebrew:
+#     name: vscodium
+#     state: latest
+#     update_homebrew: true
+
+#- name: Check if vscodium is registered to handle "vscode://" urls
+#  ansible.builtin.command: xdg-settings get default-url-scheme-handler vscode
+#  register: default_url_scheme_handler
+#  changed_when: false
+
+#- name: Ensure that vscodium is registered to handle "vscode://" urls
+#  ansible.builtin.command: xdg-settings set default-url-scheme-handler vscode codium-url-handler.desktop
+#  when: "'codium-url-handler.desktop' not in default_url_scheme_handler.stdout"
+
+- name: Include extensions.yml tasks
+  ansible.builtin.include_tasks: extensions.yml

@@ -1,0 +1,52 @@
+---
+- name: Define install user
+  ansible.builtin.set_fact:
+    font_install_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  when: font_install_user is not defined
+
+- name: Ensure fontconfig package is installed
+  become: true
+  ansible.builtin.package:
+    name: fontconfig
+    state: present
+
+- name: Create font directory
+  ansible.builtin.file:
+    path: "~/.local/share/fonts"
+    owner: "{{ font_install_user }}"
+    group: "{{ font_install_user }}"
+    mode: '0750'
+    state: directory
+
+- name: Set font cache update fact
+  ansible.builtin.set_fact:
+    update_font_cache: false
+
+- name: Check if nerd fonts are installed
+  ansible.builtin.stat:
+    path: /usr/local/share/fonts/NerdFonts
+  register: fonts
+
+- name: Clone nerd fonts repo
+  ansible.builtin.git:
+    repo: 'https://github.com/ryanoasis/nerd-fonts'
+    dest: '/tmp/nerd-fonts'
+    version: v2.1.0
+    single_branch: true
+    clone: true
+    depth: 1
+  when: not fonts.stat.exists
+
+- name: Install nerd fonts
+  become: true
+  ansible.builtin.command: /tmp/nerd-fonts/install.sh -S
+  when: not fonts.stat.exists
+
+- name: Update font cache fact
+  ansible.builtin.set_fact:
+    update_font_cache: true
+  when: not fonts.stat.exists
+
+- name: Rebuild font cache
+  ansible.builtin.command: "fc-cache -f -v"
+  when: update_font_cache

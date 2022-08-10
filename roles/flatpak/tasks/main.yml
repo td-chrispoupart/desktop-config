@@ -1,0 +1,22 @@
+---
+- name: install flatpak packages
+  become: true
+  ansible.builtin.package:
+    name: "flatpak"
+    state: present
+
+# This is installed by default on Fedora, but Fedora filters the repo. Updating
+# using the upstream configuration removes the filter.
+- name: install flatpak remote
+  become: true
+  ansible.builtin.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+
+- name: Install Flatpak Applications
+  become: true
+  ansible.builtin.flatpak:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ flatpak_applications }}"

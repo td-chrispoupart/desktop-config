@@ -1,0 +1,77 @@
+---
+- name: Set nodejs:{{ nodejs_version }} appstream
+  become: true
+  command: "dnf module enable -y nodejs:{{ nodejs_version }}"
+  register: result
+  changed_when:
+    - "'Enabling module streams' in result.stdout"
+
+- name: Install nodejs-{{ nodejs_version }}
+  become: true
+  ansible.builtin.package:
+    name: nodejs
+    state: present
+
+- name: Define nodejs_install_npm_user
+  ansible.builtin.set_fact:
+    nodejs_install_npm_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  when: nodejs_install_npm_user is not defined
+
+- name: Define nodejs_global_directory
+  ansible.builtin.set_fact:
+    nodejs_global_directory: "/home/{{ nodejs_install_npm_user }}/.npm-global"
+
+- name: Ensure npm global directory exists
+  ansible.builtin.file:
+    path: "{{ nodejs_global_directory }}"
+    owner: "{{ nodejs_install_npm_user }}"
+    group: "{{ nodejs_install_npm_user }}"
+    mode: '0755'
+    state: directory
+
+- name: Does ~/.npmrc exist?
+  ansible.builtin.stat:
+    path: ~/.npmrc
+  register: npmrc
+
+- name: Check for global directory status
+  ansible.builtin.lineinfile:
+    path: ~/.npmrc
+    line: "prefix={{ nodejs_global_directory }}"
+    state: present
+  check_mode: true
+  register: global_directory_present
+  when: npmrc.stat.exists
+
+- name: Ensure npm knows to use global directory
+  ansible.builtin.command: npm config set prefix "{{ nodejs_global_directory }}"
+  when:
+    - global_directory_present is changed or not npmrc.stat.exists
+
+- name: Set Path for Fish
+  ansible.builtin.copy:
+    dest: ~/.config/fish/conf.d/npm.fish
+    content: |
+      fish_add_path -m {{ nodejs_global_directory }}/bin
+      set -xg NPM_CONFIG_PREFIX "{{ nodejs_global_directory }}"
+      set -xg NODE_PATH "$NODE_PATH {{ nodejs_global_directory }}/lib/node_modules"
+    owner: "{{ nodejs_install_npm_user }}"
+    group: "{{ nodejs_install_npm_user }}"
+    mode: '0660'
+
+- name: Register currently installed global npm packages
+  ansible.builtin.command: "npm list --global --json"
+  register: installed_global_npm_packages
+  changed_when: "false"
+
+- name: Ensure npm global packages are installed.
+  community.general.npm:
+    name: "{{ item.name | default(item) }}"
+    version: "{{ item.version | default('latest') }}"
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ nodejs_global_directory }}"
+    NODE_PATH: "{{ nodejs_global_directory }}/lib/node_modules"
+  with_items: "{{ nodejs_npm_global_packages }}"
+  when: "item not in installed_global_npm_packages.stdout"

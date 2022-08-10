@@ -1,0 +1,25 @@
+---
+- name: Ensure HashiCorp YUM repo is present
+  become: true
+  ansible.builtin.yum_repository:
+    name: hashicorp
+    description: HashiCorp Stable
+    baseurl: "https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "https://rpm.releases.hashicorp.com/gpg"
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure Vagrant is installed
+  become: true
+  ansible.builtin.package:
+    name: vagrant
+    state: present
+  when: install_vagrant
+
+- name: Ensure Packer is installed
+  become: true
+  ansible.builtin.package:
+    name: packer
+    state: present
+  when: install_packer

@@ -1,0 +1,5 @@
+---
+git_config:
+  user_name: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  user_email: "{{ ansible_user | default(lookup('env', 'USER')) }}@{{ ansible_hostname }}"
+  init_defaultbranch: "main"

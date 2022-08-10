@@ -1,0 +1,24 @@
+---
+- name: Make sure git is installed
+  become: false  ## TODO: make this a var with false for Darwin
+  ansible.builtin.package:
+    name: git
+    state: present
+
+- name: Configure user.name in Git Global Settings
+  ansible.builtin.git_config:
+    name: user.name
+    value: "{{ git_config.user_name }}"
+    scope: global
+
+- name: Configure user.email in Git Global Settings
+  ansible.builtin.git_config:
+    name: user.email
+    value: "{{ git_config.user_email }}"
+    scope: global
+
+- name: Configure init.defaultbranch in Git Global Settings
+  ansible.builtin.git_config:
+    name: init.defaultbranch
+    value: "{{ git_config.init_defaultbranch }}"
+    scope: global

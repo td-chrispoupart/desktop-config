@@ -1,0 +1,41 @@
+---
+- hosts: all
+
+  # You CAN run this playbook directly, but you are better off running 'make
+  # all' or see 'make help' for more details on using this playbook with the
+  # Makefile. If you choose to not use the makefile, you will need to manually
+  # configure some additional variables. See Makefile for details.
+
+  vars_files:
+    - default.config.yml
+  pre_tasks:
+    - name: Include playbook configuration.
+      include_vars: "{{ item }}"
+      with_fileglob:
+        - "{{ playbook_dir }}/config.yml"
+      tags: ['always']
+
+  roles:
+    - {role: aux_in, tags: ['framework', 'desktop']}
+    - {role: brave, tags: ['browser', 'desktop']}
+    - {role: chrome, tags: ['browser', 'desktop']}
+    - {role: codium, tags: ['development', 'desktop', 'codium']}
+    - {role: fish, tags: ['terminal', 'desktop', 'fonts', 'shell', 'fish']}
+    - {role: firefox, tags: ['browser', 'desktop']}
+    - {role: flatpak, tags: ['flatpak', 'desktop']}
+    - {role: fonts, tags: ['terminal', 'desktop', 'fonts']}
+    - {role: git_config, tags: ['git', 'development', 'terminal']}
+    - {role: google_cloud_sdk, tags: ['gcp', 'development']}
+    - {role: gpg, tags: ['gpg', 'ssh-agent']}
+    - {role: gtkthemes, tags: ['gnome', 'desktop']}
+    - {role: hashicorp, tags: ['hashicorp', 'development', 'vagrant', 'packer']}
+    - {role: kubernetes, tags: ['development', 'terminal']}
+    - {role: mcgill_pki, tags: ['desktop', 'development', 'mcgill']}
+    - {role: mongodb, tags: ['development']}
+    - {role: steam, tags: ['gaming', 'desktop', 'personal']}
+    - {role: terminology, tags: ['terminal', 'desktop', 'fonts']}
+    - {role: nodejs, tags: ['nodejs', 'development']}
+    - {role: virtualbox, tags: ['vm', 'development']}
+    - {role: vpn, tags: ['vpn']}
+    - {role: webex, tags: ['webex']}
+    - {role: yadm, tags: ['terminal', 'development']}

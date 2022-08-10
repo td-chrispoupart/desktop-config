@@ -1,0 +1,78 @@
+---
+- name: Define install user
+  ansible.builtin.set_fact:
+    gpg_install_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  when: gpg_install_user is not defined
+
+- name: Make sure ~/.gnugpg exists
+  ansible.builtin.file:
+    path: ~/.gnupg
+    state: directory
+    owner: "{{ gpg_install_user }}"
+    group: "{{ gpg_install_user }}"
+    mode: "0700"
+
+- name: Install required packages
+  become: true
+  ansible.builtin.package:
+    name:
+      - pinentry-gnome3
+      - gnupg2
+      - pcsc-tools
+      - pcsc-lite
+      - gnupg2-smime
+    state: present
+
+# When pcscd.socket is running, on a first boot we can't get the card to be
+# read properly without stopping (restarting?) the service.
+# TODO: Find a user-level work-around so that this works on a fresh login
+- name: Disable pcscd.socket
+  become: true
+  ansible.builtin.systemd:
+    name: pcscd.socket
+    state: started
+    enabled: true
+
+- name: Setup gnupg configuration
+  ansible.builtin.copy:
+    content: |
+      # https://www.gnupg.org/documentation/manuals/gnupg/Agent-Options.html
+      enable-ssh-support
+      ttyname $GPG_TTY
+      default-cache-ttl 60
+      max-cache-ttl 120
+      pinentry-program /usr/bin/pinentry-gnome3
+    dest: ~/.gnupg/gpg-agent.conf
+    owner: "{{ gpg_install_user }}"
+    group: "{{ gpg_install_user }}"
+    mode: "0600"
+
+- name: Setup scdaemon configuration
+  ansible.builtin.copy:
+    content: |
+      disable-ccid
+      pcsc-driver /usr/lib64/libpcsclite.so.1
+      card-timeout 1
+
+      # Always try to use yubikey as the first reader
+      # even when other smart card readers are connected
+      # Name of the reader can be found using the pcsc_scan command
+      # If you have problems with gpg not recognizing the Yubikey
+      # then make sure that the string here matches exacly pcsc_scan
+      # command output. Also check journalctl -f for errors.
+      reader-port Yubico YubiKey
+    dest: ~/.gnupg/scdaemon.conf
+    owner: "{{ gpg_install_user }}"
+    group: "{{ gpg_install_user }}"
+    mode: "0600"
+
+- name: Set environment variables in Fish
+  ansible.builtin.copy:
+    content: |
+      set -x GPG_TTY (tty)
+      set -x SSH_AUTH_SOCK (gpgconf --list-dirs agent-ssh-socket)
+      gpgconf --launch gpg-agent
+    dest: ~/.config/fish/conf.d/gpg.fish
+    owner: "{{ gpg_install_user }}"
+    group: "{{ gpg_install_user }}"
+    mode: "0600"

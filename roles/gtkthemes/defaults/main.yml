@@ -1,0 +1,8 @@
+---
+gtk_theme:
+  package_name: materia-gtk-theme
+  theme_name: 'Materia-dark-compact'
+
+icon_theme:
+  package_name: material-icons-fonts
+  theme_name: 'Material'

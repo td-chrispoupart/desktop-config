@@ -1,0 +1,4 @@
+---
+google_cloud_package_names:
+  - google-cloud-sdk
+  - google-cloud-sdk-terraform-validator

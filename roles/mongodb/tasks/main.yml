@@ -1,0 +1,35 @@
+---
+- name: Ensure that the MongoDB YUM repository is configured
+  become: true
+  ansible.builtin.yum_repository:
+    name: mongodb
+    description: MongoDB Repository
+    baseurl: https://repo.mongodb.org/yum/redhat/8/mongodb-org/4.4/x86_64/
+    gpgcheck: true
+    enabled: false
+    gpgkey: https://www.mongodb.org/static/pgp/server-4.4.asc
+  when: ansible_os_family == "RedHat"
+
+- name: Make sure that the MongoDB Shell and Tools are present
+  become: true
+  ansible.builtin.package:
+    name:
+      - mongodb-org-shell
+      - mongodb-org-tools
+    enablerepo: mongodb
+    state: present
+  when: mongodb_shell and "ansible_os_family == 'RedHat'"
+
+# Note: mongodb is not supported on Fedora, and the developers have no plans to
+# make it work.
+- name: Make sure that the MongoDB Server is installed
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - mongodb-org
+      - mongodb-org-server
+    enablerepo: mongodb
+    state: present
+  when: mongodb_server and "ansible_os_family == 'RedHat'"
+
+# TODO: Add tasks to ensure service is up and running

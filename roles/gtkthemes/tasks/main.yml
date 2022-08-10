@@ -1,0 +1,30 @@
+---
+- name: Install our GTK theme from Fedora Repos
+  become: true
+  ansible.builtin.package:
+    name: "{{ gtk_theme.package_name }}"
+    state: present
+
+- name: Is the GTK theme currently set?
+  ansible.builtin.command: "gsettings get org.gnome.desktop.interface gtk-theme"
+  register: current_gtk_theme
+  changed_when: false
+
+- name: Configure our GTK theme for the current user
+  ansible.builtin.command: "gsettings set org.gnome.desktop.interface gtk-theme {{ gtk_theme.theme_name }}"
+  when: "gtk_theme.theme_name not in current_gtk_theme.stdout"
+
+- name: Install our icon theme from Fedora Repos
+  become: true
+  ansible.builtin.package:
+    name: "{{ icon_theme.package_name }}"
+    state: present
+
+- name: IS the icon theme currently set?
+  ansible.builtin.command: "gsettings get org.gnome.desktop.interface icon-theme"
+  register: current_icon_theme
+  changed_when: false
+
+- name: Configure our icon theme for the current user
+  ansible.builtin.command: "gsettings set org.gnome.desktop.interface icon-theme {{ icon_theme.theme_name }}"
+  when: "icon_theme.theme_name not in current_icon_theme.stdout"

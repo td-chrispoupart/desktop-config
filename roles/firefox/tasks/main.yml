@@ -1,0 +1,18 @@
+---
+- name: Ensure that Firefox is installed
+  become: true
+  ansible.builtin.package:
+    name: firefox
+    state: present
+
+- name: Get the default Web Browser
+  ansible.builtin.command: xdg-settings get default-web-browser
+  register: current_default_browser
+  changed_when: false
+  when: "'firefox' in default_browser"
+
+- name: Make sure that Firefox is the default browser
+  ansible.builtin.command: xdg-settings set default-web-browser firefox.desktop
+  when:
+    - "'firefox' in default_browser"
+    - "'firefox' not in current_default_browser.stdout"

@@ -1,0 +1,30 @@
+---
+- name: Ensure that the Brave Yum Repo is Configured
+  become: true
+  ansible.builtin.yum_repository:
+    name: brave-browser
+    description: brave-browser
+    baseurl: https://brave-browser-rpm-release.s3.brave.com/x86_64/
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Brave Browser for Linux
+  become: true
+  ansible.builtin.package:
+    name: brave-browser
+    state: present
+
+- name: Get the default Web Browser
+  ansible.builtin.command: xdg-settings get default-web-browser
+  register: current_default_browser
+  changed_when: false
+  when: "'brave-browser' in default_browser"
+
+- name: Make sure that Brave is the default browser
+  ansible.builtin.command: xdg-settings set default-web-browser brave-browser.desktop
+  when:
+    - "'brave-browser' in default_browser"
+    - "'brave-browser' not in current_default_browser.stdout"

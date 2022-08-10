@@ -1,0 +1,16 @@
+---
+- name: Make sure that we have the McGill Campus PKI CA Certificate
+  become: true
+  ansible.builtin.get_url:
+    url: https://mirror.ncs.mcgill.ca/certs/PKICampusRoot.pem
+    dest: /etc/pki/ca-trust/source/anchors/mcgill-csa.pem
+    owner: root
+    group: root
+    mode: '0664'
+  register: get_mcgill_ca
+  when: certs_mcgill_ca
+
+- name: Update CA Trust
+  become: true
+  ansible.builtin.command: update-ca-trust extract
+  when: get_mcgill_ca.changed

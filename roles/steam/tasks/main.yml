@@ -1,0 +1,14 @@
+---
+- name: Configure RPM Fusion YUM repos
+  include_tasks: rpm_fusion.yml
+  when:
+    - not is_work_computer
+    - ansible_distribution == "Fedora"
+
+- name: Ensure Steam is installed
+  become: true
+  ansible.builtin.package:
+    name: steam
+    state: present
+  when: not is_work_computer
+

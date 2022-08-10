@@ -1,0 +1,86 @@
+---
+- name: Register currently installed code extensions
+  ansible.builtin.command: "{{ codium_bin }} --list-extensions"
+  register: installed_code_extensions
+  changed_when: "false"
+
+- name: Code Extensions
+  ansible.builtin.command: "{{ codium_bin }} --install-extension {{ item }}"
+  with_items: "{{ code_extensions }}"
+  when: "item not in installed_code_extensions.stdout_lines"
+
+- name: Debug Code Extensions Installed but not in variables
+  ansible.builtin.debug:
+    var: "{{ item }}"
+  with_items: "{{ installed_code_extensions.stdout_lines }}"
+  when: "item not in code_extensions"
+
+- name: Configure Codium to use Nerd Fonts
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/terminal.integrated.fontFamily"
+        value: "Hack Nerd Font Mono"
+  when: codium_configs.nerd_fonts
+
+- name: Configure Red Hat Telemetry
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/redhat.telemetry.enabled"
+        value: "{{ codium_configs.redhat_telemetry }}"
+  when: "'redhat' in installed_code_extensions.stdout_lines"
+
+- name: Trim extra space on save
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/trailing-spaces.trimOnSave"
+        value: true
+  when: codium_configs.trimonsave
+
+- name: Use VSCode Icons Theme
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/workbench.iconTheme"
+        value: "vscode-icons"
+  when: "'vscode-icons' in installed_code_extensions.stdout_lines and codium_configs.vscode_icons"
+
+- name: Ensures our default VSCodium theme is set
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/workbench.colorTheme"
+        value: "{{ codium_configs.theme }}"
+
+- name: Configure default spaces
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/editor.tabSize"
+        value: "{{ codium_configs.tabsize }}"
+      - op: add
+        path: "/editor.insertSpaces"
+        value: true
+
+- name: Configure insertFinalNewLine
+  json_patch:
+    pretty: true
+    src: "{{ codium_settings }}"
+    operations:
+      - op: add
+        path: "/files.insertFinalNewline"
+        value: "{{ codium_configs.insertfinalnewline | bool }}"

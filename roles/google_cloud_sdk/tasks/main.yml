@@ -1,0 +1,18 @@
+---
+- name: Ensure that Google Cloud YUM repo is present
+  become: true
+  ansible.builtin.yum_repository:
+    name: gcp
+    description: google_cloud_sdk
+    baseurl: "https://packages.cloud.google.com/yum/repos/cloud-sdk-el8-x86_64"
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: true
+    enabled: true
+    repo_gpgcheck: true
+  when: ansible_os_family == "RedHat"
+
+- name: Install Google Cloud SDK and components
+  become: true
+  ansible.builtin.package:
+    name: "{{ google_cloud_package_names }}"
+    state: present

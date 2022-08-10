@@ -1,0 +1,72 @@
+---
+- name: Define fish_install_user if not defined
+  ansible.builtin.set_fact:
+    fish_install_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  when: fish_install_user is not defined
+
+# Look at https://github.com/oscpe262/ansible-role-fish
+- name: Install Fish shell
+  become: true
+  ansible.builtin.package:
+    name: fish
+    state: present
+
+- name: Make fish our default shell
+  become: true
+  ansible.builtin.user:
+    name: "{{ fish_install_user }}"
+    shell: '/usr/bin/fish'
+
+- name: Check if oh-my-fish is installed
+  ansible.builtin.stat:
+    path: "/home/{{ fish_install_user }}/.config/omf"
+  register: omf
+
+- name: Clone oh-my-fish repo
+  ansible.builtin.git:
+    repo: 'https://github.com/oh-my-fish/oh-my-fish'
+    dest: '/tmp/omf'
+    version: v7
+    clone: true
+  when: not omf.stat.exists
+
+- name: Install oh-my-fish
+  ansible.builtin.command: /tmp/omf/bin/install -y --offline --noninteractive
+  when: not omf.stat.exists
+
+- name: Configure Fish
+  ansible.builtin.copy:
+    content: |
+      set -g theme_title_use_abbreviated_path yes
+      set -g theme_show_exit_status yes
+      set -g theme_display_vagrant yes
+      set -g fish_prompt_pwd_dir_length 0
+      set -g theme_color_scheme solarized-dark
+      set -g theme_nerd_fonts yes
+      set -g theme_date_format "+%a %H:%M"
+      set -ga fish_user_paths ~/.local/bin
+      # fenv source /etc/profile
+      # fenv source ~/.bash_profile
+    dest: "/home/{{ fish_install_user }}/.config/fish/config.fish"
+    mode: '0644'
+    owner: "{{ fish_install_user }}"
+    group: "{{ fish_install_user }}"
+
+- name: OMF | Is Bob The Fish installed?
+  ansible.builtin.stat:
+    path: ~/.local/share/omf/themes/bobthefish
+  register: bobthefish
+
+- name: OMF | Install Bob The Fish
+  ansible.builtin.command: fish -c 'omf install bobthefish'
+  when: not bobthefish.stat.exists
+
+# See: https://github.com/oh-my-fish/plugin-foreign-env
+- name: OMF | Is foreign-env plugin installed?
+  ansible.builtin.stat:
+    path: ~/.local/share/omf/pkg/foreign-env
+  register: foreign_env
+
+- name: OMF | Install foreign-env
+  ansible.builtin.command: fish -c 'omf install foreign-env'
+  when: not foreign_env.stat.exists

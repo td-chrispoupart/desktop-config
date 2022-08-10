@@ -1,0 +1,22 @@
+---
+- name: Add Kubernetes YUM Repo
+  become: true
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    state: present
+    description: kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    enabled: true
+    gpgcheck: true
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure kubectl is present
+  become: true
+  ansible.builtin.package:
+    name: kubectl
+    state: present
+
+# TODO: This looks fairly involved. See this role for inspiration:
+# https://github.com/tosin2013/codeready-containers-hacks
+# - name: Ensure CodeReady Containers (OKD 4) is present
